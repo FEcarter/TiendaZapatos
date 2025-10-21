@@ -1,13 +1,14 @@
 package com.example.tiendazapatos.ui.shared
 
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.width
-import androidx.compose.material3.CenterAlignedTopAppBar
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
-import androidx.compose.runtime.Composable
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material.icons.filled.ShoppingCart
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
@@ -15,7 +16,9 @@ import androidx.navigation.NavController
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun MyTopAppBar(navController: NavController) {
+fun MyTopAppBar(navController: NavController, cartItemCount: Int) {
+    var showMenu by remember { mutableStateOf(false) }
+
     CenterAlignedTopAppBar(
         title = {
             Row(verticalAlignment = Alignment.CenterVertically) {
@@ -29,6 +32,45 @@ fun MyTopAppBar(navController: NavController) {
                 Spacer(modifier = Modifier.width(8.dp))
                 TextButton(onClick = { navController.navigate("producto") }) {
                     Text("Producto")
+                }
+            }
+        },
+        actions = {
+            // Cart Icon with Badge
+            BadgedBox(
+                badge = {
+                    if (cartItemCount > 0) {
+                        Badge { Text("$cartItemCount") }
+                    }
+                }
+            ) {
+                IconButton(onClick = { navController.navigate("cart") }) {
+                    Icon(
+                        imageVector = Icons.Default.ShoppingCart,
+                        contentDescription = "Carrito de compras"
+                    )
+                }
+            }
+
+            // Admin Menu
+            Box {
+                IconButton(onClick = { showMenu = !showMenu }) {
+                    Icon(
+                        imageVector = Icons.Default.MoreVert,
+                        contentDescription = "Más opciones"
+                    )
+                }
+                DropdownMenu(
+                    expanded = showMenu,
+                    onDismissRequest = { showMenu = false }
+                ) {
+                    DropdownMenuItem(
+                        text = { Text("Administración") },
+                        onClick = {
+                            navController.navigate("admin")
+                            showMenu = false
+                        }
+                    )
                 }
             }
         }
