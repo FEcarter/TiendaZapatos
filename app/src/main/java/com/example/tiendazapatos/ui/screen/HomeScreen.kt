@@ -8,11 +8,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 
 @Composable
-fun UserScreen(modifier: Modifier = Modifier) {
+fun HomeScreen(modifier: Modifier = Modifier) {
     Box(
         modifier = modifier.fillMaxSize(),
         contentAlignment = Alignment.Center
     ) {
-        Text(text = "Pantalla de Cliente")
+        Text(text = "Pantalla de Inicio")
     }
 }
