@@ -4,24 +4,20 @@ import androidx.annotation.DrawableRes
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.tiendazapatos.R
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.SharingStarted
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.stateIn
-import kotlinx.coroutines.flow.update
+import com.example.tiendazapatos.data.remote.dao.OrderDao
+import com.example.tiendazapatos.data.remote.model.Order
+import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.launch
 
-// Se movió desde ProductScreen.kt para ser gestionado centralmente
 data class Product(
-    val id: Int, // Añadimos un ID único para cada producto
+    val id: Int,
     val name: String,
     val description: String,
     val price: Double,
     @DrawableRes val imageRes: Int
 )
 
-class ProductViewModel : ViewModel() {
+class ProductViewModel(private val orderDao: OrderDao) : ViewModel() {
 
     // --- GESTIÓN DE PRODUCTOS ---
     private val _products = MutableStateFlow<List<Product>>(emptyList())
@@ -31,7 +27,14 @@ class ProductViewModel : ViewModel() {
     private val _cartItems = MutableStateFlow<List<Product>>(emptyList())
     val cartItems: StateFlow<List<Product>> = _cartItems.asStateFlow()
 
-    // --- PRECIO TOTAL DEL CARRITO (Calculado automáticamente a partir de cartItems) ---
+    // --- GESTIÓN DEL HISTORIAL DE PEDIDOS ---
+    val orderHistory: StateFlow<List<Order>> = orderDao.getAllOrders()
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000L),
+            initialValue = emptyList()
+        )
+
     val totalPrice: StateFlow<Double> = cartItems.map { items ->
         items.sumOf { it.price }
     }.stateIn(
@@ -40,17 +43,16 @@ class ProductViewModel : ViewModel() {
         initialValue = 0.0
     )
 
-
     init {
         loadProducts()
     }
 
     private fun loadProducts() {
         _products.value = listOf(
-            Product(1, "Zapato Deportivo", "Ideal para correr y entrenar.", 89.99, R.drawable.zapato1),
+            Product(1, "Zapato Deportivo", "Ideal para correr y entrenar.", 89.99, R.drawable.zapatodeportivo2),
             Product(2, "Zapato Casual", "Perfecto para el día a día.", 69.99, R.drawable.zapato1),
-            Product(3, "Bota de Cuero", "Elegancia y durabilidad para el invierno.", 129.99, R.drawable.zapato1),
-            Product(4, "Sandalia de Verano", "Comodidad y frescura para el calor.", 49.99, R.drawable.zapato1)
+            Product(3, "Bota de Cuero", "Elegancia y durabilidad para el invierno.", 129.99, R.drawable.botadecuero),
+            Product(4, "Sandalia de Verano", "Comodidad y frescura para el calor.", 49.99, R.drawable.zandaliadeverano)
         )
     }
 
@@ -65,7 +67,23 @@ class ProductViewModel : ViewModel() {
     }
 
     fun confirmOrder() {
-        _cartItems.update { emptyList() }
+        viewModelScope.launch {
+            val currentCart = _cartItems.value
+            if (currentCart.isNotEmpty()) {
+                val newOrder = Order(
+                    total = currentCart.sumOf { it.price },
+                    itemCount = currentCart.size
+                )
+                orderDao.insertOrder(newOrder)
+                _cartItems.update { emptyList() } // Vaciar el carrito después de guardar
+            }
+        }
+    }
+
+    fun clearOrderHistory() {
+        viewModelScope.launch {
+            orderDao.clearAllOrders()
+        }
     }
 
     // --- FUNCIONES DE ADMINISTRADOR (CRUD) ---

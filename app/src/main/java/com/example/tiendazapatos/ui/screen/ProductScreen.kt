@@ -8,15 +8,16 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavController
 import com.example.tiendazapatos.ui.components.ProductCard
 import com.example.tiendazapatos.ui.viewmodel.ProductViewModel
 
 @Composable
 fun ProductScreen(
     modifier: Modifier = Modifier,
-    productViewModel: ProductViewModel = viewModel() // Inyecta el ViewModel
+    productViewModel: ProductViewModel = viewModel(),
+    navController: NavController // Añadimos el NavController
 ) {
-    // Observa el flujo de productos del ViewModel y se recompone cuando cambia.
     val products by productViewModel.products.collectAsState()
 
     LazyColumn(
@@ -28,7 +29,9 @@ fun ProductScreen(
                 description = product.description,
                 price = product.price,
                 imageRes = product.imageRes,
-                onAddToCartClick = { productViewModel.addToCart(product) } // ¡Aquí está la conexión!
+                onAddToCartClick = { productViewModel.addToCart(product) },
+                // ¡Aquí está la nueva conexión para la navegación!
+                onCardClick = { navController.navigate("productDetail/${product.id}") }
             )
         }
     }

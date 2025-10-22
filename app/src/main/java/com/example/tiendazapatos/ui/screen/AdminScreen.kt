@@ -44,8 +44,7 @@ fun AdminScreen(
                 .padding(paddingValues),
             contentPadding = PaddingValues(16.dp)
         ) {
-            items(products) {
-                product ->
+            items(products) { product ->
                 Card(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -63,7 +62,7 @@ fun AdminScreen(
                             Text(String.format("$%.2f", product.price))
                         }
                         Row {
-                            IconButton(onClick = { /* TODO: Navegar a pantalla de editar producto */ }) {
+                            IconButton(onClick = { navController.navigate("editProduct/${product.id}") }) {
                                 Icon(Icons.Default.Edit, contentDescription = "Editar")
                             }
                             IconButton(onClick = { productViewModel.deleteProduct(product) }) {

@@ -10,18 +10,30 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
+import com.example.tiendazapatos.ui.viewmodel.Product
 import com.example.tiendazapatos.ui.viewmodel.ProductViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun AddProductScreen(
+fun EditProductScreen(
     navController: NavController,
-    productViewModel: ProductViewModel
+    productViewModel: ProductViewModel,
+    productId: Int
 ) {
-    // Estados para los valores de los campos
-    var name by remember { mutableStateOf("") }
-    var description by remember { mutableStateOf("") }
-    var price by remember { mutableStateOf("") }
+    // Buscar el producto a editar. Si no se encuentra, volver.
+    val productToEdit = productViewModel.products.collectAsState().value.find { it.id == productId }
+
+    if (productToEdit == null) {
+        // Si el producto no existe, simplemente volvemos.
+        // Esto puede pasar si el producto fue eliminado en segundo plano.
+        navController.popBackStack()
+        return
+    }
+
+    // Estados para los valores de los campos, inicializados con los datos del producto
+    var name by remember { mutableStateOf(productToEdit.name) }
+    var description by remember { mutableStateOf(productToEdit.description) }
+    var price by remember { mutableStateOf(productToEdit.price.toString()) }
 
     // Estados para los mensajes de error de validación
     var nameError by remember { mutableStateOf<String?>(null) }
@@ -31,7 +43,7 @@ fun AddProductScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Añadir Producto") },
+                title = { Text("Editar Producto") },
                 navigationIcon = {
                     IconButton(onClick = { navController.popBackStack() }) {
                         Icon(Icons.Default.ArrowBack, contentDescription = "Volver")
@@ -47,7 +59,6 @@ fun AddProductScreen(
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            // --- Campo Nombre ---
             OutlinedTextField(
                 value = name,
                 onValueChange = { name = it; nameError = null },
@@ -57,7 +68,6 @@ fun AddProductScreen(
                 supportingText = { nameError?.let { Text(it, color = MaterialTheme.colorScheme.error) } }
             )
 
-            // --- Campo Descripción ---
             OutlinedTextField(
                 value = description,
                 onValueChange = { description = it; descriptionError = null },
@@ -67,7 +77,6 @@ fun AddProductScreen(
                 supportingText = { descriptionError?.let { Text(it, color = MaterialTheme.colorScheme.error) } }
             )
 
-            // --- Campo Precio ---
             OutlinedTextField(
                 value = price,
                 onValueChange = { price = it; priceError = null },
@@ -78,10 +87,8 @@ fun AddProductScreen(
                 supportingText = { priceError?.let { Text(it, color = MaterialTheme.colorScheme.error) } }
             )
 
-            // --- Botón de Guardar ---
             Button(
                 onClick = {
-                    // Validar todos los campos
                     val priceDouble = price.toDoubleOrNull()
                     var isValid = true
 
@@ -98,15 +105,19 @@ fun AddProductScreen(
                         isValid = false
                     }
 
-                    // Si todo es válido, guardar y volver
                     if (isValid) {
-                        productViewModel.addProduct(name, description, priceDouble!!)
-                        navController.popBackStack() // Volver a AdminScreen
+                        val updatedProduct = productToEdit.copy(
+                            name = name,
+                            description = description,
+                            price = priceDouble!!
+                        )
+                        productViewModel.updateProduct(updatedProduct)
+                        navController.popBackStack()
                     }
                 },
                 modifier = Modifier.fillMaxWidth()
             ) {
-                Text("Guardar Producto")
+                Text("Guardar Cambios")
             }
         }
     }
