@@ -13,6 +13,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.example.tiendazapatos.data.remote.AppDatabase
@@ -31,30 +32,36 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             TiendaZapatosTheme {
-                // --- ViewModels ---
                 val database = AppDatabase.getDatabase(applicationContext)
                 val authViewModel: AuthViewModel = viewModel(factory = AuthViewModelFactory(database.userDao()))
                 val productViewModel: ProductViewModel = viewModel(factory = ProductViewModelFactory(database.orderDao()))
 
-                // --- Estados ---
                 val navController = rememberNavController()
                 val cartItems by productViewModel.cartItems.collectAsState()
                 val currentUser by authViewModel.currentUser.collectAsState()
 
+                val navBackStackEntry by navController.currentBackStackEntryAsState()
+                val currentRoute = navBackStackEntry?.destination?.route
+
                 Scaffold(
                     topBar = {
-                        MyTopAppBar(
-                            navController = navController,
-                            cartItemCount = cartItems.size,
-                            userName = currentUser?.name,
-                            onLogout = { authViewModel.logout() }
-                        )
+                        if (currentRoute != "splash_screen") {
+                            MyTopAppBar(
+                                navController = navController,
+                                cartItemCount = cartItems.size,
+                                userName = currentUser?.name,
+                                onLogout = { authViewModel.logout() }
+                            )
+                        }
                     },
-                    bottomBar = { MyFooter() }
+                    bottomBar = {
+                        if (currentRoute != "splash_screen") {
+                            MyFooter()
+                        }
+                    }
                 ) { innerPadding ->
-                    // --- Navegación Principal Unificada ---
-                    NavHost(navController = navController, startDestination = "inicio", modifier = Modifier.padding(innerPadding)) {
-                        // Rutas de la Tienda
+                    NavHost(navController = navController, startDestination = "splash_screen", modifier = Modifier.padding(innerPadding)) {
+                        composable("splash_screen") { SplashScreen(navController = navController) }
                         composable("inicio") { HomeScreen(navController = navController) }
                         composable("cliente") { UserScreen() }
                         composable("producto") { ProductScreen(productViewModel = productViewModel, navController = navController) }
@@ -80,8 +87,6 @@ class MainActivity : ComponentActivity() {
                                 ProductDetailScreen(navController, productViewModel, productId)
                             }
                         }
-
-                        // Rutas de Autenticación
                         composable("login") { LoginScreen(navController = navController, authViewModel = authViewModel) }
                         composable("register") { RegisterScreen(navController = navController, authViewModel = authViewModel) }
                     }
