@@ -14,7 +14,8 @@ data class Product(
     val name: String,
     val description: String,
     val price: Double,
-    @DrawableRes val imageRes: Int
+    @DrawableRes val imageRes: Int,
+    val stock: Int = 0
 )
 
 class ProductViewModel(private val orderDao: OrderDao) : ViewModel() {
@@ -49,10 +50,10 @@ class ProductViewModel(private val orderDao: OrderDao) : ViewModel() {
 
     private fun loadProducts() {
         _products.value = listOf(
-            Product(1, "Zapato Deportivo", "Ideal para correr y entrenar.", 89.99, R.drawable.zapatodeportivo2),
-            Product(2, "Zapato Casual", "Perfecto para el día a día.", 69.99, R.drawable.zapato1),
-            Product(3, "Bota de Cuero", "Elegancia y durabilidad para el invierno.", 129.99, R.drawable.botadecuero),
-            Product(4, "Sandalia de Verano", "Comodidad y frescura para el calor.", 49.99, R.drawable.zandaliadeverano)
+            Product(1, "Zapato Deportivo", "Ideal para correr y entrenar.", 89.99, R.drawable.zapatodeportivo2, 10),
+            Product(2, "Zapato Casual", "Perfecto para el día a día.", 69.99, R.drawable.zapato1, 20),
+            Product(3, "Bota de Cuero", "Elegancia y durabilidad para el invierno.", 129.99, R.drawable.botadecuero, 15),
+            Product(4, "Sandalia de Verano", "Comodidad y frescura para el calor.", 49.99, R.drawable.zandaliadeverano, 30)
         )
     }
 
@@ -95,7 +96,8 @@ class ProductViewModel(private val orderDao: OrderDao) : ViewModel() {
             name = name,
             description = description,
             price = price,
-            imageRes = R.drawable.zapato1 // Usamos una imagen por defecto
+            imageRes = R.drawable.zapato1, // Usamos una imagen por defecto
+            stock = 10 // Stock inicial por defecto
         )
         _products.update { currentProducts -> currentProducts + newProduct }
     }

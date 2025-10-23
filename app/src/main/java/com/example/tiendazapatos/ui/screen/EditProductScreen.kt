@@ -34,11 +34,13 @@ fun EditProductScreen(
     var name by remember { mutableStateOf(productToEdit.name) }
     var description by remember { mutableStateOf(productToEdit.description) }
     var price by remember { mutableStateOf(productToEdit.price.toString()) }
+    var stock by remember { mutableStateOf(productToEdit.stock.toString()) }
 
     // Estados para los mensajes de error de validación
     var nameError by remember { mutableStateOf<String?>(null) }
     var descriptionError by remember { mutableStateOf<String?>(null) }
     var priceError by remember { mutableStateOf<String?>(null) }
+    var stockError by remember { mutableStateOf<String?>(null) }
 
     Scaffold(
         topBar = {
@@ -87,9 +89,20 @@ fun EditProductScreen(
                 supportingText = { priceError?.let { Text(it, color = MaterialTheme.colorScheme.error) } }
             )
 
+            OutlinedTextField(
+                value = stock,
+                onValueChange = { stock = it; stockError = null },
+                label = { Text("Stock") },
+                modifier = Modifier.fillMaxWidth(),
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                isError = stockError != null,
+                supportingText = { stockError?.let { Text(it, color = MaterialTheme.colorScheme.error) } }
+            )
+
             Button(
                 onClick = {
                     val priceDouble = price.toDoubleOrNull()
+                    val stockInt = stock.toIntOrNull()
                     var isValid = true
 
                     if (name.isBlank()) {
@@ -104,12 +117,17 @@ fun EditProductScreen(
                         priceError = "Introduce un precio válido y mayor que cero"
                         isValid = false
                     }
+                    if (stockInt == null || stockInt < 0) {
+                        stockError = "Introduce un stock válido"
+                        isValid = false
+                    }
 
                     if (isValid) {
                         val updatedProduct = productToEdit.copy(
                             name = name,
                             description = description,
-                            price = priceDouble!!
+                            price = priceDouble!!,
+                            stock = stockInt!!
                         )
                         productViewModel.updateProduct(updatedProduct)
                         navController.popBackStack()

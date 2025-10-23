@@ -60,7 +60,9 @@ fun AdminScreen(
                         Column(modifier = Modifier.weight(1f)) {
                             Text(product.name, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
                             Text(String.format("$%.2f", product.price))
+                            Text(if (product.stock > 0) "En stock (${product.stock})" else "Sin stock")
                         }
+                        Spacer(modifier = Modifier.width(16.dp))
                         Row {
                             IconButton(onClick = { navController.navigate("editProduct/${product.id}") }) {
                                 Icon(Icons.Default.Edit, contentDescription = "Editar")

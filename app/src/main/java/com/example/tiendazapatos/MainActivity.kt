@@ -18,8 +18,8 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.example.tiendazapatos.data.remote.AppDatabase
 import com.example.tiendazapatos.ui.screen.*
-import com.example.tiendazapatos.ui.shared.MyFooter
-import com.example.tiendazapatos.ui.shared.MyTopAppBar
+import com.example.tiendazapatos.ui.shared.AppBottomNavBar
+import com.example.tiendazapatos.ui.shared.AppTopAppBar
 import com.example.tiendazapatos.ui.theme.TiendaZapatosTheme
 import com.example.tiendazapatos.ui.viewmodel.AuthViewModel
 import com.example.tiendazapatos.ui.viewmodel.ProductViewModel
@@ -46,7 +46,7 @@ class MainActivity : ComponentActivity() {
                 Scaffold(
                     topBar = {
                         if (currentRoute != "splash_screen") {
-                            MyTopAppBar(
+                            AppTopAppBar(
                                 navController = navController,
                                 cartItemCount = cartItems.size,
                                 userName = currentUser?.name,
@@ -56,7 +56,7 @@ class MainActivity : ComponentActivity() {
                     },
                     bottomBar = {
                         if (currentRoute != "splash_screen") {
-                            MyFooter()
+                            AppBottomNavBar(navController = navController)
                         }
                     }
                 ) { innerPadding ->
