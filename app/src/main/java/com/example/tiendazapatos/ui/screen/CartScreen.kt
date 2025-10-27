@@ -22,7 +22,6 @@ fun CartScreen(productViewModel: ProductViewModel = viewModel()) {
     val cartItems by productViewModel.cartItems.collectAsState()
     val totalPrice by productViewModel.totalPrice.collectAsState()
 
-    // Para gestionar el Snackbar
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
 

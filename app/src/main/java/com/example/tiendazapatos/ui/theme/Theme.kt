@@ -19,15 +19,15 @@ private val DarkColorScheme = darkColorScheme(
     primary = Purple80,
     secondary = PurpleGrey80,
     tertiary = Pink80,
-    background = Color.Black // Fondo oscuro para el modo noche
+    background = Color.Black
 )
 
 private val LightColorScheme = lightColorScheme(
     primary = Purple40,
     secondary = PurpleGrey40,
     tertiary = Pink40,
-    background = Beige, // ¡Aquí está el nuevo color de fondo!
-    surface = Beige, // También lo aplicamos a las superficies como las tarjetas
+    background = Beige,
+    surface = Beige,
     onPrimary = Color.White,
     onSecondary = Color.White,
     onTertiary = Color.White,
@@ -38,7 +38,7 @@ private val LightColorScheme = lightColorScheme(
 @Composable
 fun TiendaZapatosTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
-    dynamicColor: Boolean = false, // Desactivamos el color dinámico para que use el nuestro
+    dynamicColor: Boolean = false,
     content: @Composable () -> Unit
 ) {
     val colorScheme = when {

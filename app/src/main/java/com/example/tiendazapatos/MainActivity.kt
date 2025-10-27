@@ -17,14 +17,16 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.example.tiendazapatos.data.remote.AppDatabase
+import com.example.tiendazapatos.data.remote.repository.ProductRepository
+import com.example.tiendazapatos.data.remote.repository.UserRepository
 import com.example.tiendazapatos.ui.screen.*
 import com.example.tiendazapatos.ui.shared.AppBottomNavBar
 import com.example.tiendazapatos.ui.shared.AppTopAppBar
 import com.example.tiendazapatos.ui.theme.TiendaZapatosTheme
 import com.example.tiendazapatos.ui.viewmodel.AuthViewModel
+import com.example.tiendazapatos.ui.viewmodel.AuthViewModelFactory
 import com.example.tiendazapatos.ui.viewmodel.ProductViewModel
-import com.example.tiendazapatos.viewmodel.AuthViewModelFactory
-import com.example.tiendazapatos.viewmodel.ProductViewModelFactory
+import com.example.tiendazapatos.ui.viewmodel.ProductViewModelFactory
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -33,8 +35,12 @@ class MainActivity : ComponentActivity() {
         setContent {
             TiendaZapatosTheme {
                 val database = AppDatabase.getDatabase(applicationContext)
-                val authViewModel: AuthViewModel = viewModel(factory = AuthViewModelFactory(database.userDao()))
-                val productViewModel: ProductViewModel = viewModel(factory = ProductViewModelFactory(database.orderDao()))
+
+                val productRepository = ProductRepository(database.orderDao())
+                val productViewModel: ProductViewModel = viewModel(factory = ProductViewModelFactory(productRepository))
+
+                val userRepository = UserRepository(database.userDao())
+                val authViewModel: AuthViewModel = viewModel(factory = AuthViewModelFactory(userRepository))
 
                 val navController = rememberNavController()
                 val cartItems by productViewModel.cartItems.collectAsState()
@@ -63,8 +69,8 @@ class MainActivity : ComponentActivity() {
                     NavHost(navController = navController, startDestination = "splash_screen", modifier = Modifier.padding(innerPadding)) {
                         composable("splash_screen") { SplashScreen(navController = navController) }
                         composable("inicio") { HomeScreen(navController = navController) }
-                        composable("cliente") { UserScreen() }
                         composable("producto") { ProductScreen(productViewModel = productViewModel, navController = navController) }
+                        composable("soporte") { SoporteScreen() } // <-- RUTA AÑADIDA
                         composable("cart") { CartScreen(productViewModel = productViewModel) }
                         composable("admin") { AdminScreen(navController = navController, productViewModel = productViewModel) }
                         composable("addProduct") { AddProductScreen(navController = navController, productViewModel = productViewModel) }

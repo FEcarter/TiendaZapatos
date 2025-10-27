@@ -1,19 +1,21 @@
 package com.example.tiendazapatos.ui.screen
 
-import androidx.compose.foundation.Image
+import android.content.Intent
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.Share
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
+import coil.compose.AsyncImage
 import com.example.tiendazapatos.ui.viewmodel.ProductViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -24,10 +26,9 @@ fun ProductDetailScreen(
     productId: Int
 ) {
     val product = productViewModel.products.collectAsState().value.find { it.id == productId }
+    val context = LocalContext.current // Obtenemos el contexto para usarlo en el Intent
 
     if (product == null) {
-        // Si por alguna razón el producto no se encuentra, mostramos un mensaje
-        // y ofrecemos una forma de volver.
         Scaffold {
             Box(modifier = Modifier.fillMaxSize().padding(it), contentAlignment = Alignment.Center) {
                 Text("Producto no encontrado.")
@@ -44,6 +45,24 @@ fun ProductDetailScreen(
                     IconButton(onClick = { navController.popBackStack() }) {
                         Icon(Icons.Default.ArrowBack, contentDescription = "Volver")
                     }
+                },
+                actions = {
+                    IconButton(onClick = {
+                        val sendIntent: Intent = Intent().apply {
+                            action = Intent.ACTION_SEND
+                            putExtra(Intent.EXTRA_TEXT, 
+                                "¡Mira este increíble producto!\n\n" +
+                                "${product.name}\n" +
+                                "${product.description}\n" +
+                                "Precio: $${String.format("%.2f", product.price)}"
+                            )
+                            type = "text/plain"
+                        }
+                        val shareIntent = Intent.createChooser(sendIntent, null)
+                        context.startActivity(shareIntent)
+                    }) {
+                        Icon(Icons.Default.Share, contentDescription = "Compartir")
+                    }
                 }
             )
         }
@@ -54,8 +73,9 @@ fun ProductDetailScreen(
                 .padding(paddingValues)
                 .padding(16.dp)
         ) {
-            Image(
-                painter = painterResource(id = product.imageRes),
+
+            AsyncImage(
+                model = product.imageUri,
                 contentDescription = product.name,
                 modifier = Modifier
                     .fillMaxWidth()

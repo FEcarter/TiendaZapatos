@@ -20,23 +20,18 @@ fun EditProductScreen(
     productViewModel: ProductViewModel,
     productId: Int
 ) {
-    // Buscar el producto a editar. Si no se encuentra, volver.
     val productToEdit = productViewModel.products.collectAsState().value.find { it.id == productId }
 
     if (productToEdit == null) {
-        // Si el producto no existe, simplemente volvemos.
-        // Esto puede pasar si el producto fue eliminado en segundo plano.
         navController.popBackStack()
         return
     }
 
-    // Estados para los valores de los campos, inicializados con los datos del producto
     var name by remember { mutableStateOf(productToEdit.name) }
     var description by remember { mutableStateOf(productToEdit.description) }
     var price by remember { mutableStateOf(productToEdit.price.toString()) }
     var stock by remember { mutableStateOf(productToEdit.stock.toString()) }
 
-    // Estados para los mensajes de error de validación
     var nameError by remember { mutableStateOf<String?>(null) }
     var descriptionError by remember { mutableStateOf<String?>(null) }
     var priceError by remember { mutableStateOf<String?>(null) }

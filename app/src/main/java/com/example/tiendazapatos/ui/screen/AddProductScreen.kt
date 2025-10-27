@@ -1,15 +1,23 @@
 package com.example.tiendazapatos.ui.screen
 
+import android.content.Intent
+import android.net.Uri
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
+import coil.compose.AsyncImage
 import com.example.tiendazapatos.ui.viewmodel.ProductViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -18,15 +26,36 @@ fun AddProductScreen(
     navController: NavController,
     productViewModel: ProductViewModel
 ) {
-    // Estados para los valores de los campos
     var name by remember { mutableStateOf("") }
     var description by remember { mutableStateOf("") }
     var price by remember { mutableStateOf("") }
+    var imageUri by remember { mutableStateOf<Uri?>(null) }
 
-    // Estados para los mensajes de error de validación
     var nameError by remember { mutableStateOf<String?>(null) }
     var descriptionError by remember { mutableStateOf<String?>(null) }
     var priceError by remember { mutableStateOf<String?>(null) }
+    var imageError by remember { mutableStateOf<String?>(null) }
+
+    val context = LocalContext.current
+
+    val imagePickerLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetContent(),
+        onResult = { uri: Uri? ->
+            uri?.let {
+                try {
+                    context.contentResolver.takePersistableUriPermission(
+                        it,
+                        Intent.FLAG_GRANT_READ_URI_PERMISSION
+                    )
+                    imageUri = it
+                    imageError = null
+                } catch (e: SecurityException) {
+                    e.printStackTrace()
+                    imageError = "No se pudo obtener permiso para la imagen."
+                }
+            }
+        }
+    )
 
     Scaffold(
         topBar = {
@@ -47,7 +76,6 @@ fun AddProductScreen(
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            // --- Campo Nombre ---
             OutlinedTextField(
                 value = name,
                 onValueChange = { name = it; nameError = null },
@@ -57,7 +85,6 @@ fun AddProductScreen(
                 supportingText = { nameError?.let { Text(it, color = MaterialTheme.colorScheme.error) } }
             )
 
-            // --- Campo Descripción ---
             OutlinedTextField(
                 value = description,
                 onValueChange = { description = it; descriptionError = null },
@@ -67,7 +94,6 @@ fun AddProductScreen(
                 supportingText = { descriptionError?.let { Text(it, color = MaterialTheme.colorScheme.error) } }
             )
 
-            // --- Campo Precio ---
             OutlinedTextField(
                 value = price,
                 onValueChange = { price = it; priceError = null },
@@ -78,30 +104,45 @@ fun AddProductScreen(
                 supportingText = { priceError?.let { Text(it, color = MaterialTheme.colorScheme.error) } }
             )
 
-            // --- Botón de Guardar ---
+            Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                Button(onClick = { imagePickerLauncher.launch("image/*") }) {
+                    Text("Seleccionar Imagen")
+                }
+                Spacer(modifier = Modifier.width(16.dp))
+
+                if (imageUri != null) {
+                    AsyncImage(
+                        model = imageUri,
+                        contentDescription = "Vista previa de la imagen",
+                        modifier = Modifier.size(100.dp),
+                        contentScale = ContentScale.Crop
+                    )
+                } else {
+                    Box(
+                        modifier = Modifier.size(100.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text("Sin imagen")
+                    }
+                }
+            }
+            if (imageError != null) {
+                Text(imageError!!, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall)
+            }
+
             Button(
                 onClick = {
-                    // Validar todos los campos
                     val priceDouble = price.toDoubleOrNull()
                     var isValid = true
 
-                    if (name.isBlank()) {
-                        nameError = "El nombre no puede estar vacío"
-                        isValid = false
-                    }
-                    if (description.isBlank()) {
-                        descriptionError = "La descripción no puede estar vacía"
-                        isValid = false
-                    }
-                    if (priceDouble == null || priceDouble <= 0) {
-                        priceError = "Introduce un precio válido y mayor que cero"
-                        isValid = false
-                    }
+                    if (name.isBlank()) { nameError = "El nombre no puede estar vacío"; isValid = false }
+                    if (description.isBlank()) { descriptionError = "La descripción no puede estar vacía"; isValid = false }
+                    if (priceDouble == null || priceDouble <= 0) { priceError = "Introduce un precio válido"; isValid = false }
+                    if (imageUri == null) { imageError = "Debes seleccionar una imagen"; isValid = false }
 
-                    // Si todo es válido, guardar y volver
                     if (isValid) {
-                        productViewModel.addProduct(name, description, priceDouble!!)
-                        navController.popBackStack() // Volver a AdminScreen
+                        productViewModel.addProduct(name, description, priceDouble!!, imageUri.toString())
+                        navController.popBackStack()
                     }
                 },
                 modifier = Modifier.fillMaxWidth()

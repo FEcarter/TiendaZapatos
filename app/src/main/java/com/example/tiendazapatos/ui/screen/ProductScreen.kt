@@ -16,7 +16,7 @@ import com.example.tiendazapatos.ui.viewmodel.ProductViewModel
 fun ProductScreen(
     modifier: Modifier = Modifier,
     productViewModel: ProductViewModel = viewModel(),
-    navController: NavController // Añadimos el NavController
+    navController: NavController
 ) {
     val products by productViewModel.products.collectAsState()
 
@@ -26,11 +26,9 @@ fun ProductScreen(
         items(products) { product ->
             ProductCard(
                 name = product.name,
-                description = product.description,
                 price = product.price,
-                imageRes = product.imageRes,
+                imageUri = product.imageUri,
                 onAddToCartClick = { productViewModel.addToCart(product) },
-                // ¡Aquí está la nueva conexión para la navegación!
                 onCardClick = { navController.navigate("productDetail/${product.id}") }
             )
         }

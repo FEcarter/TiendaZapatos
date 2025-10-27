@@ -16,6 +16,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
+import coil.compose.AsyncImage
 import com.example.tiendazapatos.ui.viewmodel.ProductViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -29,7 +30,7 @@ fun AdminScreen(
     Scaffold(
         topBar = {
             CenterAlignedTopAppBar(
-                title = { Text("Administración") }
+                title = { Text("Administración de Productos") }
             )
         },
         floatingActionButton = {
@@ -54,13 +55,17 @@ fun AdminScreen(
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(16.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.SpaceBetween
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
+                        AsyncImage(
+                            model = product.imageUri,
+                            contentDescription = product.name,
+                            modifier = Modifier.size(64.dp)
+                        )
+                        Spacer(modifier = Modifier.width(16.dp))
                         Column(modifier = Modifier.weight(1f)) {
                             Text(product.name, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
                             Text(String.format("$%.2f", product.price))
-                            Text(if (product.stock > 0) "En stock (${product.stock})" else "Sin stock")
                         }
                         Spacer(modifier = Modifier.width(16.dp))
                         Row {

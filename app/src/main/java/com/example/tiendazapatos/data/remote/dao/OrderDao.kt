@@ -15,7 +15,13 @@ interface OrderDao {
 
     @Query("SELECT * FROM orders ORDER BY timestamp DESC")
     fun getAllOrders(): Flow<List<Order>>
+    
+    @Query("SELECT * FROM orders WHERE id = :id LIMIT 1")
+    suspend fun getOrderById(id: Int): Order?
 
     @Query("DELETE FROM orders")
     suspend fun clearAllOrders()
+
+    @androidx.room.Delete
+    suspend fun deleteOrder(order: Order)
 }
