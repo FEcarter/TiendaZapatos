@@ -9,6 +9,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.core.view.WindowCompat
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
@@ -25,12 +26,14 @@ import com.example.tiendazapatos.ui.shared.AppTopAppBar
 import com.example.tiendazapatos.ui.theme.TiendaZapatosTheme
 import com.example.tiendazapatos.ui.viewmodel.AuthViewModel
 import com.example.tiendazapatos.ui.viewmodel.AuthViewModelFactory
+import com.example.tiendazapatos.ui.viewmodel.PostViewModel
 import com.example.tiendazapatos.ui.viewmodel.ProductViewModel
 import com.example.tiendazapatos.ui.viewmodel.ProductViewModelFactory
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        WindowCompat.setDecorFitsSystemWindows(window, false)
         enableEdgeToEdge()
         setContent {
             TiendaZapatosTheme {
@@ -48,6 +51,9 @@ class MainActivity : ComponentActivity() {
 
                 val navBackStackEntry by navController.currentBackStackEntryAsState()
                 val currentRoute = navBackStackEntry?.destination?.route
+
+
+
 
                 Scaffold(
                     topBar = {
@@ -70,7 +76,8 @@ class MainActivity : ComponentActivity() {
                         composable("splash_screen") { SplashScreen(navController = navController) }
                         composable("inicio") { HomeScreen(navController = navController) }
                         composable("producto") { ProductScreen(productViewModel = productViewModel, navController = navController) }
-                        composable("soporte") { SoporteScreen() } // <-- RUTA AÑADIDA
+                        composable("soporte") { SoporteScreen() }
+                        composable("post") {PostScreen()}
                         composable("cart") { CartScreen(productViewModel = productViewModel) }
                         composable("admin") { AdminScreen(navController = navController, productViewModel = productViewModel) }
                         composable("addProduct") { AddProductScreen(navController = navController, productViewModel = productViewModel) }
