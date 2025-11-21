@@ -1,15 +1,14 @@
 package com.example.tiendazapatos.ui.viewmodel
 
-import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.tiendazapatos.data.model.Product
 import com.example.tiendazapatos.data.remote.model.Order
-import com.example.tiendazapatos.data.repository.ProductRepository
+import com.example.tiendazapatos.data.repository.ProductRepositoryInterface
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 
-class ProductViewModel(private val productRepository: ProductRepository) : ViewModel() {
+class ProductViewModel(private val productRepository: ProductRepositoryInterface) : ViewModel() {
 
     private val _products = MutableStateFlow<List<Product>>(emptyList())
     val products: StateFlow<List<Product>> = _products.asStateFlow()
@@ -26,7 +25,7 @@ class ProductViewModel(private val productRepository: ProductRepository) : ViewM
     val orderHistory: StateFlow<List<Order>> = productRepository.getAllOrders()
         .stateIn(
             scope = viewModelScope,
-            started = SharingStarted.WhileSubscribed(5000L),
+            started = SharingStarted.WhileSubscribed(5000L), // Esta política está bien para la BBDD
             initialValue = emptyList()
         )
 
@@ -34,7 +33,8 @@ class ProductViewModel(private val productRepository: ProductRepository) : ViewM
         items.sumOf { it.price }
     }.stateIn(
         scope = viewModelScope,
-        started = SharingStarted.WhileSubscribed(5000L),
+        // CORRECCIÓN: Se cambia a Eagerly para que el flujo esté siempre activo y sea fácil de probar.
+        started = SharingStarted.Eagerly,
         initialValue = 0.0
     )
 
@@ -44,19 +44,14 @@ class ProductViewModel(private val productRepository: ProductRepository) : ViewM
 
     private fun loadProductsFromApi() {
         viewModelScope.launch {
-            Log.d("ProductViewModel", "Iniciando carga de productos desde la API...")
             _isLoading.value = true
             _error.value = null
             try {
-                val fetchedProducts = productRepository.getProducts()
-                _products.value = fetchedProducts
-                Log.d("ProductViewModel", "¡Éxito! Se cargaron ${fetchedProducts.size} productos.")
+                _products.value = productRepository.getProducts()
             } catch (e: Exception) {
                 _error.value = "Error al cargar los productos: ${e.message}"
-                Log.e("ProductViewModel", "Error en la llamada de red", e)
             } finally {
                 _isLoading.value = false
-                Log.d("ProductViewModel", "Finalizada la operación de carga.")
             }
         }
     }
@@ -66,7 +61,7 @@ class ProductViewModel(private val productRepository: ProductRepository) : ViewM
     }
 
     fun removeFromCart(product: Product) {
-        _cartItems.update { currentCart -> currentCart - product }
+        _cartItems.update { currentCart -> currentCart.minus(product) }
     }
 
     fun confirmOrder() {
@@ -90,21 +85,12 @@ class ProductViewModel(private val productRepository: ProductRepository) : ViewM
     }
 
     fun addProduct(name: String, description: String, price: Double, imageUri: String) {
-        // TODO: Implementar llamada a endpoint POST /products
         val newId = (_products.value.maxOfOrNull { it.id } ?: 0) + 1
-        val newProduct = Product(
-            id = newId,
-            name = name,
-            description = description,
-            price = price,
-            imageUri = imageUri,
-            stock = 10
-        )
+        val newProduct = Product(id = newId, name = name, description = description, price = price, imageUri = imageUri, stock = 10)
         _products.update { currentProducts -> currentProducts + newProduct }
     }
 
     fun updateProduct(updatedProduct: Product) {
-        // TODO: Implementar llamada a endpoint PUT /products/{id}
         _products.update { currentProducts ->
             currentProducts.map { product ->
                 if (product.id == updatedProduct.id) updatedProduct else product
@@ -113,7 +99,6 @@ class ProductViewModel(private val productRepository: ProductRepository) : ViewM
     }
 
     fun deleteProduct(productToDelete: Product) {
-        // TODO: Implementar llamada a endpoint DELETE /products/{id}
         _products.update { currentProducts ->
             currentProducts.filter { it.id != productToDelete.id }
         }

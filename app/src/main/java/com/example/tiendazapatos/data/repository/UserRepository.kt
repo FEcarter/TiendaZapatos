@@ -3,13 +3,14 @@ package com.example.tiendazapatos.data.repository
 import com.example.tiendazapatos.data.remote.dao.UserDao
 import com.example.tiendazapatos.data.remote.model.User
 
-class UserRepository(private val userDao: UserDao) {
+// Ahora el repositorio implementa la interfaz
+class UserRepository(private val userDao: UserDao) : UserRepositoryInterface {
 
-    suspend fun getUserByName(name: String): User? {
+    override suspend fun getUserByName(name: String): User? {
         return userDao.getUserByName(name)
     }
 
-    suspend fun insertUser(user: User) {
+    override suspend fun insertUser(user: User) {
         userDao.insertUser(user)
     }
 }
