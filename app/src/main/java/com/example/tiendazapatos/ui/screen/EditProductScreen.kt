@@ -10,7 +10,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
-import com.example.tiendazapatos.ui.viewmodel.Product
+import com.example.tiendazapatos.data.model.Product // <-- CORREGIDO
 import com.example.tiendazapatos.ui.viewmodel.ProductViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)

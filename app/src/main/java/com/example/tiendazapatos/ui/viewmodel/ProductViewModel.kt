@@ -1,26 +1,24 @@
 package com.example.tiendazapatos.ui.viewmodel
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.tiendazapatos.R
+import com.example.tiendazapatos.data.model.Product
 import com.example.tiendazapatos.data.remote.model.Order
 import com.example.tiendazapatos.data.repository.ProductRepository
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 
-data class Product(
-    val id: Int,
-    val name: String,
-    val description: String,
-    val price: Double,
-    val imageUri: String,
-    val stock: Int = 0
-)
-
 class ProductViewModel(private val productRepository: ProductRepository) : ViewModel() {
 
     private val _products = MutableStateFlow<List<Product>>(emptyList())
     val products: StateFlow<List<Product>> = _products.asStateFlow()
+
+    private val _isLoading = MutableStateFlow(false)
+    val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
+
+    private val _error = MutableStateFlow<String?>(null)
+    val error: StateFlow<String?> = _error.asStateFlow()
 
     private val _cartItems = MutableStateFlow<List<Product>>(emptyList())
     val cartItems: StateFlow<List<Product>> = _cartItems.asStateFlow()
@@ -41,17 +39,26 @@ class ProductViewModel(private val productRepository: ProductRepository) : ViewM
     )
 
     init {
-        loadProducts()
+        loadProductsFromApi()
     }
 
-    private fun loadProducts() {
-        val resourceUriPrefix = "android.resource://com.example.tiendazapatos/"
-        _products.value = listOf(
-            Product(1, "Zapato Deportivo", "Ideal para correr y entrenar.", 89.99, resourceUriPrefix + R.drawable.zapatodeportivo2, 10),
-            Product(2, "Zapato Casual", "Perfecto para el día a día.", 69.99, resourceUriPrefix + R.drawable.zapato1, 20),
-            Product(3, "Bota de Cuero", "Elegancia y durabilidad para el invierno.", 129.99, resourceUriPrefix + R.drawable.botadecuero, 15),
-            Product(4, "Sandalia de Verano", "Comodidad y frescura para el calor.", 49.99, resourceUriPrefix + R.drawable.zandaliadeverano, 30)
-        )
+    private fun loadProductsFromApi() {
+        viewModelScope.launch {
+            Log.d("ProductViewModel", "Iniciando carga de productos desde la API...")
+            _isLoading.value = true
+            _error.value = null
+            try {
+                val fetchedProducts = productRepository.getProducts()
+                _products.value = fetchedProducts
+                Log.d("ProductViewModel", "¡Éxito! Se cargaron ${fetchedProducts.size} productos.")
+            } catch (e: Exception) {
+                _error.value = "Error al cargar los productos: ${e.message}"
+                Log.e("ProductViewModel", "Error en la llamada de red", e)
+            } finally {
+                _isLoading.value = false
+                Log.d("ProductViewModel", "Finalizada la operación de carga.")
+            }
+        }
     }
 
     fun addToCart(product: Product) {
@@ -83,6 +90,7 @@ class ProductViewModel(private val productRepository: ProductRepository) : ViewM
     }
 
     fun addProduct(name: String, description: String, price: Double, imageUri: String) {
+        // TODO: Implementar llamada a endpoint POST /products
         val newId = (_products.value.maxOfOrNull { it.id } ?: 0) + 1
         val newProduct = Product(
             id = newId,
@@ -96,6 +104,7 @@ class ProductViewModel(private val productRepository: ProductRepository) : ViewM
     }
 
     fun updateProduct(updatedProduct: Product) {
+        // TODO: Implementar llamada a endpoint PUT /products/{id}
         _products.update { currentProducts ->
             currentProducts.map { product ->
                 if (product.id == updatedProduct.id) updatedProduct else product
@@ -104,6 +113,7 @@ class ProductViewModel(private val productRepository: ProductRepository) : ViewM
     }
 
     fun deleteProduct(productToDelete: Product) {
+        // TODO: Implementar llamada a endpoint DELETE /products/{id}
         _products.update { currentProducts ->
             currentProducts.filter { it.id != productToDelete.id }
         }
