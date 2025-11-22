@@ -1,13 +1,17 @@
 package com.example.tiendazapatos.data.remote
 
+import com.example.tiendazapatos.data.model.AuthRequest
 import com.example.tiendazapatos.data.model.Product
+import com.example.tiendazapatos.data.model.Post
+import retrofit2.Response
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
+import retrofit2.http.Body
 import retrofit2.http.GET
+import retrofit2.http.POST
 
 object RetrofitInstance {
 
-    // API externa (jsonplaceholder)
     val api: ApiService by lazy {
         Retrofit.Builder()
             .baseUrl("http://jsonplaceholder.typicode.com")
@@ -16,11 +20,9 @@ object RetrofitInstance {
             .create(ApiService::class.java)
     }
 
-    // API para tu microservicio de Zapatos
     val storeApi: StoreApiService by lazy {
         Retrofit.Builder()
-            // URL actualizada con tu IP real
-            .baseUrl("http://192.168.1.7:8080/") 
+            .baseUrl("http://192.168.1.7:8080/") // ¡Recuerda cambiar esta IP si es necesario!
             .addConverterFactory(GsonConverterFactory.create())
             .build()
             .create(StoreApiService::class.java)
@@ -35,11 +37,16 @@ object RetrofitInstance {
     }
 }
 
-// Interfaz para los endpoints de tu microservicio
 interface StoreApiService {
 
     @GET("api/products")
     suspend fun getProducts(): List<Product>
+
+    @POST("api/auth/register")
+    suspend fun register(@Body authRequest: AuthRequest): Response<Unit>
+
+    @POST("api/auth/login")
+    suspend fun login(@Body authRequest: AuthRequest): Response<Unit>
 }
 
-// La ApiService duplicada ha sido eliminada de aquí.
+// La interfaz ApiService duplicada que causaba el error ha sido eliminada de este archivo.

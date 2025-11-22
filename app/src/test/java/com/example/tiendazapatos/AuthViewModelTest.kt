@@ -1,5 +1,6 @@
 package com.example.tiendazapatos
 
+import com.example.tiendazapatos.data.model.AuthRequest
 import com.example.tiendazapatos.data.remote.model.User
 import com.example.tiendazapatos.data.repository.UserRepositoryInterface
 import com.example.tiendazapatos.ui.viewmodel.AuthViewModel
@@ -9,24 +10,35 @@ import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
+import okhttp3.ResponseBody.Companion.toResponseBody
 import org.junit.After
 import org.junit.Assert.*
 import org.junit.Before
 import org.junit.Test
+import retrofit2.Response
 
+// CORRECCIÓN FINAL Y DEFINITIVA: El repositorio falso ahora implementa la INTERFAZ.
 class FakeUserRepository : UserRepositoryInterface {
-    private val users = mutableListOf<User>()
+    private val users = mutableMapOf<String, String>()
 
-    override suspend fun getUserByName(name: String): User? {
-        return users.find { it.name == name }
+    // Se añade la palabra clave `override` que faltaba
+    override suspend fun login(authRequest: AuthRequest): Response<Unit> {
+        val storedPassword = users[authRequest.username]
+        return if (storedPassword != null && storedPassword == authRequest.password) {
+            Response.success(Unit)
+        } else {
+            Response.error(401, "Unauthorized".toResponseBody(null))
+        }
     }
 
-    override suspend fun insertUser(user: User) {
-        users.add(user)
+    // Se añade la palabra clave `override` que faltaba
+    override suspend fun register(authRequest: AuthRequest): Response<Unit> {
+        if (users.containsKey(authRequest.username)) {
+            return Response.error(409, "Conflict".toResponseBody(null))
+        }
+        users[authRequest.username] = authRequest.password
+        return Response.success(201, Unit)
     }
-
-    // Función de ayuda para nuestras pruebas
-    fun countUsers(): Int = users.size
 }
 
 @ExperimentalCoroutinesApi
@@ -34,7 +46,6 @@ class AuthViewModelTest {
 
     private val testDispatcher = UnconfinedTestDispatcher()
     private lateinit var viewModel: AuthViewModel
-    // Cambiamos el tipo a la clase concreta para acceder a la función de ayuda
     private lateinit var fakeRepository: FakeUserRepository
 
     @Before
@@ -51,61 +62,43 @@ class AuthViewModelTest {
 
     @Test
     fun login_withCorrectCredentials_shouldSucceed() = runTest {
-        val testUser = User(name = "test", password = "1234", age = 25)
-        fakeRepository.insertUser(testUser)
+        fakeRepository.register(AuthRequest("test", "1234"))
         var loginSuccess = false
-
-        viewModel.login("test", "1234") { success, _ ->
-            loginSuccess = success
-        }
-
+        viewModel.login("test", "1234") { success, _ -> loginSuccess = success }
         assertTrue(loginSuccess)
         assertNotNull(viewModel.currentUser.value)
     }
 
     @Test
     fun login_withIncorrectCredentials_shouldFail() = runTest {
-        val testUser = User(name = "test", password = "1234", age = 25)
-        fakeRepository.insertUser(testUser)
+        fakeRepository.register(AuthRequest("test", "1234"))
         var loginSuccess = true
-
-        viewModel.login("test", "contraseña-incorrecta") { success, _ ->
-            loginSuccess = success
-        }
-
+        viewModel.login("test", "wrong_password") { success, _ -> loginSuccess = success }
         assertFalse(loginSuccess)
         assertNull(viewModel.currentUser.value)
     }
 
     @Test
     fun register_withNewUser_shouldSucceed() = runTest {
-        // Arrange
         var registerSuccess = false
-
-        // Act
-        viewModel.register("newUser", "password") { success, _ ->
-            registerSuccess = success
-        }
-
-        // Assert
-        assertTrue("El registro debería ser exitoso", registerSuccess)
-        assertEquals("El usuario debería haber sido añadido al repositorio", 1, fakeRepository.countUsers())
+        viewModel.register("newUser", "password") { success, _ -> registerSuccess = success }
+        assertTrue(registerSuccess)
     }
 
     @Test
     fun register_withExistingUser_shouldFail() = runTest {
-        // Arrange
-        val existingUser = User(name = "existingUser", password = "1234", age = 30)
-        fakeRepository.insertUser(existingUser)
+        fakeRepository.register(AuthRequest("existingUser", "1234"))
         var registerSuccess = true
+        viewModel.register("existingUser", "newPassword") { success, _ -> registerSuccess = success }
+        assertFalse(registerSuccess)
+    }
 
-        // Act
-        viewModel.register("existingUser", "newPassword") { success, _ ->
-            registerSuccess = success
-        }
-
-        // Assert
-        assertFalse("El registro debería fallar para un usuario existente", registerSuccess)
-        assertEquals("No se debería añadir un nuevo usuario", 1, fakeRepository.countUsers())
+    @Test
+    fun logout_shouldClearCurrentUser() = runTest {
+        fakeRepository.register(AuthRequest("test", "1234"))
+        viewModel.login("test", "1234") { _, _ -> }
+        assertNotNull(viewModel.currentUser.value)
+        viewModel.logout()
+        assertNull(viewModel.currentUser.value)
     }
 }

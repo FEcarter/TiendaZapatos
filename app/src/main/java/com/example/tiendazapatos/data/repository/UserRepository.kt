@@ -1,16 +1,17 @@
 package com.example.tiendazapatos.data.repository
 
-import com.example.tiendazapatos.data.remote.dao.UserDao
-import com.example.tiendazapatos.data.remote.model.User
+import com.example.tiendazapatos.data.model.AuthRequest
+import com.example.tiendazapatos.data.remote.RetrofitInstance
+import retrofit2.Response
 
-// Ahora el repositorio implementa la interfaz
-class UserRepository(private val userDao: UserDao) : UserRepositoryInterface {
+// CORRECCIÓN: El repositorio ahora implementa la interfaz de red correcta.
+class UserRepository : UserRepositoryInterface {
 
-    override suspend fun getUserByName(name: String): User? {
-        return userDao.getUserByName(name)
+    override suspend fun register(authRequest: AuthRequest): Response<Unit> {
+        return RetrofitInstance.storeApi.register(authRequest)
     }
 
-    override suspend fun insertUser(user: User) {
-        userDao.insertUser(user)
+    override suspend fun login(authRequest: AuthRequest): Response<Unit> {
+        return RetrofitInstance.storeApi.login(authRequest)
     }
 }

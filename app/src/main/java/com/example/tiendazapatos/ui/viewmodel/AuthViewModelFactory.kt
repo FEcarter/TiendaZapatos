@@ -2,14 +2,15 @@ package com.example.tiendazapatos.ui.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
-import com.example.tiendazapatos.data.repository.UserRepository // <-- Importamos el Repositorio
+import com.example.tiendazapatos.data.repository.UserRepository
 
-
-class AuthViewModelFactory(private val userRepository: UserRepository) : ViewModelProvider.Factory {
+// CORRECCIÓN: La fábrica ahora no necesita ningún argumento, porque el UserRepository tampoco.
+class AuthViewModelFactory : ViewModelProvider.Factory {
     override fun <T : ViewModel> create(modelClass: Class<T>): T {
         if (modelClass.isAssignableFrom(AuthViewModel::class.java)) {
             @Suppress("UNCHECKED_CAST")
-            return AuthViewModel(userRepository) as T // <-- Le pasamos el repositorio
+            // Crea una nueva instancia del UserRepository de red y se la pasa al ViewModel
+            return AuthViewModel(UserRepository()) as T
         }
         throw IllegalArgumentException("Unknown ViewModel class")
     }

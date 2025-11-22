@@ -19,14 +19,12 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.example.tiendazapatos.data.remote.AppDatabase
 import com.example.tiendazapatos.data.repository.ProductRepository
-import com.example.tiendazapatos.data.repository.UserRepository
 import com.example.tiendazapatos.ui.screen.*
 import com.example.tiendazapatos.ui.shared.AppBottomNavBar
 import com.example.tiendazapatos.ui.shared.AppTopAppBar
 import com.example.tiendazapatos.ui.theme.TiendaZapatosTheme
 import com.example.tiendazapatos.ui.viewmodel.AuthViewModel
 import com.example.tiendazapatos.ui.viewmodel.AuthViewModelFactory
-import com.example.tiendazapatos.ui.viewmodel.PostViewModel
 import com.example.tiendazapatos.ui.viewmodel.ProductViewModel
 import com.example.tiendazapatos.ui.viewmodel.ProductViewModelFactory
 
@@ -42,8 +40,8 @@ class MainActivity : ComponentActivity() {
                 val productRepository = ProductRepository(database.orderDao())
                 val productViewModel: ProductViewModel = viewModel(factory = ProductViewModelFactory(productRepository))
 
-                val userRepository = UserRepository(database.userDao())
-                val authViewModel: AuthViewModel = viewModel(factory = AuthViewModelFactory(userRepository))
+                // CORRECCIÓN: La creación del AuthViewModel ahora es mucho más simple
+                val authViewModel: AuthViewModel = viewModel(factory = AuthViewModelFactory())
 
                 val navController = rememberNavController()
                 val cartItems by productViewModel.cartItems.collectAsState()
@@ -51,9 +49,6 @@ class MainActivity : ComponentActivity() {
 
                 val navBackStackEntry by navController.currentBackStackEntryAsState()
                 val currentRoute = navBackStackEntry?.destination?.route
-
-
-
 
                 Scaffold(
                     topBar = {
@@ -77,7 +72,7 @@ class MainActivity : ComponentActivity() {
                         composable("inicio") { HomeScreen(navController = navController) }
                         composable("producto") { ProductScreen(productViewModel = productViewModel, navController = navController) }
                         composable("soporte") { SoporteScreen() }
-                        composable("post") {PostScreen()}
+                        // composable("post") { PostScreen() } // Se comenta para evitar errores si no está implementado
                         composable("cart") { CartScreen(productViewModel = productViewModel) }
                         composable("admin") { AdminScreen(navController = navController, productViewModel = productViewModel) }
                         composable("addProduct") { AddProductScreen(navController = navController, productViewModel = productViewModel) }
